@@ -1,0 +1,78 @@
+# Global settings for the job application harness.
+# All keys documented; change defaults only when you understand the effect.
+
+harness:
+  timezone: Asia/Kolkata
+  log_level: INFO
+  activity_log_path: tracker/activity_log.md
+
+discovery:
+  # Public ATS company slugs. These require no login.
+  greenhouse_slugs:
+    # - stripe
+    # - airbnb
+    # - discord
+  lever_slugs:
+    # - netflix
+    # - shopify
+  ashby_slugs:
+    # - openai
+    # - notion
+  # Free-form career-page URLs (Playwright scraper).
+  careers_urls: []
+
+  # Login-gated sources. Enable only after you seed the Playwright
+  # user-data directory by logging in once through the launched Chromium
+  # (the harness will walk you through this on the first run).
+  linkedin:
+    enabled: false
+    user_data_dir: .pw-linkedin
+    search_urls: []
+  indeed:
+    enabled: false
+    user_data_dir: .pw-indeed
+    search_urls: []
+  naukri:
+    enabled: false
+    user_data_dir: .pw-naukri
+    search_urls: []
+
+  # Deduplication signals used across sources.
+  dedupe_by:
+    - job_url
+    - requisition_id
+    - company_role_hash
+
+  # Cap per source per run so a single source can't dominate.
+  max_per_source_per_run: 200
+
+filters:
+  # Hard filters applied before scoring. Anything failing is REJECTED.
+  min_experience_years: 0
+  max_experience_years: 15
+  work_modes: [remote, hybrid, onsite]
+  # Roles the user is genuinely targeting (aligns with preferences.md).
+  target_role_patterns:
+    - "(?i)frontend"
+    - "(?i)front[- ]?end"
+    - "(?i)react"
+    - "(?i)next\\.?js"
+    - "(?i)angular"
+    - "(?i)ui engineer"
+    - "(?i)ux engineer"
+    - "(?i)full[- ]?stack"
+  # Companies to skip regardless of match score.
+  company_blocklist: []
+  # Titles that always disqualify a posting.
+  title_blocklist:
+    - "(?i)principal"
+    - "(?i)staff"
+    - "(?i)director"
+    - "(?i)manager"
+    - "(?i)vp of "
+    - "(?i)head of "
+
+# Rate limits and safety.
+rate_limits:
+  discovery_requests_per_minute: 30
+  playwright_actions_per_minute: 20

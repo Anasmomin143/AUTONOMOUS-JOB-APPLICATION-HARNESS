@@ -1,0 +1,30 @@
+2026-09-05 23:22
+-
+BOOTSTRAP
+harness initialized
+
+2026-09-05 23:23
+-
+DISCOVER_START
+target=5
+
+2026-09-05 23:23
+-
+DISCOVER_DONE
+new=0 total=0
+
+2026-09-05 23:23
+-
+STOP
+sentinel written
+
+2026-09-05 23:23
+-
+DISCOVER_START
+target=5
+
+2026-09-05 23:23
+-
+DISCOVER_DONE
+new=0 total=0
+

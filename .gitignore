@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# State (never commit runtime state)
+state/*
+!state/.gitkeep
+
+# Screenshots and DOM snapshots
+applications/*/checkpoints/
+applications/*/pending_approval.json
+applications/*/decision.json
+applications/*/screenshots/
+
+# Tailored resumes contain PII; do not commit
+resumes/tailored/*.pdf
+resumes/tailored/*.html
+
+# The Excel tracker contains PII
+tracker/Job_Application_Tracker.xlsx
+
+# Anything the user drops in as private
+profile/*.pdf
+profile/private/
+
+# Reports may contain PII
+reports/**/*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+
+# Playwright user data
+.pw-user-data/
+.pw-linkedin/
+.pw-indeed/
+.pw-naukri/

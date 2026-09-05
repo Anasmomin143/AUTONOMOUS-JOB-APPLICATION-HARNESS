@@ -1,0 +1,41 @@
+# Scoring weights sum to 100 (spec §5).
+# Change with care: any change is applied to newly-scored jobs only;
+# existing scores are not recomputed unless you run /score-all --rescore.
+
+weights:
+  technical_skills:       30
+  relevant_experience:    25
+  responsibilities:       20
+  domain_experience:      10
+  seniority:               5
+  ats_keyword_alignment:   5
+  education_and_other:     5
+
+# Skill weighting inside `technical_skills` — pulls from
+# profile/master-profile.md `skills:` block at scoring time.
+# Each match in the JD adds to the sub-score; matches are capped at 1x per token.
+skill_synonyms:
+  react: [react, react.js, reactjs]
+  next: [next, next.js, nextjs]
+  angular: [angular, angular.js, angularjs]
+  typescript: [typescript, ts]
+  javascript: [javascript, js, ecmascript]
+  redux: [redux, "@reduxjs/toolkit", "redux-toolkit"]
+  rxjs: [rxjs]
+  tailwind: [tailwind, tailwindcss]
+  jest: [jest]
+  playwright: [playwright]
+
+# Classification thresholds (spec §5).
+thresholds:
+  strong: 90    # 90-100
+  review: 80    # 80-89
+  low:    70    # 70-79
+  # <70 => rejected
+
+# Domain synonyms — bonuses when a JD's domain overlaps with the user's history.
+domains:
+  supply_chain: [supply chain, logistics, order management, procurement]
+  travel:       [travel, hospitality, booking, hotel, airline]
+  banking:      [banking, fintech, financial services, bank]
+  crm:          [crm, customer relationship, sales pipeline]

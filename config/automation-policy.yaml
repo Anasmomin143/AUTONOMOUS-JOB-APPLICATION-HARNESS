@@ -1,0 +1,101 @@
+# Automation policy (spec §14).
+# Ships fail-safe: supervised, no auto-submit, all message sending off.
+
+mode: supervised                       # supervised | autonomous
+
+minimum_match_score: 85
+max_applications_per_batch: 100
+max_applications_per_day: 100
+
+allowed_job_sources:
+  - greenhouse
+  - lever
+  - ashby
+  - linkedin
+  - indeed
+  - naukri
+  - careers_page
+
+allowed_roles:
+  - "(?i)frontend"
+  - "(?i)front[- ]?end"
+  - "(?i)react"
+  - "(?i)angular"
+  - "(?i)next\\.?js"
+  - "(?i)ui engineer"
+  - "(?i)full[- ]?stack"
+
+allowed_locations:
+  - "(?i)india"
+  - "(?i)hyderabad"
+  - "(?i)bangalore|bengaluru"
+  - "(?i)mumbai"
+  - "(?i)pune"
+  - "(?i)remote"
+  - "(?i)worldwide"
+
+allowed_work_modes: [remote, hybrid, onsite]
+
+# Salary policy (optional; leave null to ignore).
+minimum_salary_inr_pa: null
+minimum_salary_usd_pa: null
+max_salary_deviation_pct: 20
+
+# Authorization / sponsorship — the harness will STOP on any question
+# whose answer depends on these unless the user has resolved them here.
+work_authorization:
+  india:     unrestricted
+  usa:       requires_sponsorship
+  uk:        requires_sponsorship
+  eu:        requires_sponsorship
+  canada:    requires_sponsorship
+
+# Resume rules
+require_verified_resume: true          # tailored resumes MUST pass validation
+resume_type_default: master            # master | tailored | auto
+tailor_when_match_below: 92            # auto-tailor when score below this
+
+# Screening-answer policy
+stop_on_unknown_question: true
+approved_answer_paths:
+  - messages/screening-answers.yaml    # user edits this
+
+# Message policies
+allow_recruiter_messages: false
+allow_followups: false                 # /followup draft-only until true
+allow_cover_letters: false             # off by default; enable per-role if desired
+allow_custom_questions: true
+allow_external_assessments: false      # skip jobs requiring HackerRank/Codility/etc.
+
+# Interview / offer autonomy — HARD-CODED OFF, cannot be enabled by config.
+allow_interview_acceptance: false
+allow_offer_acceptance: false
+
+# Submission control — the second lock.
+allow_application_submission: false
+
+# Safety stops
+stop_on_captcha: true
+stop_on_mfa: true
+stop_on_otp: true
+stop_on_login_verification: true
+stop_on_human_verification: true
+stop_on_sensitive_question: true
+stop_on_legal_attestation: true
+stop_on_demographic_question: true
+
+# Verification
+require_email_verification: true
+require_page_verification: true
+
+# Follow-up timing (days)
+followup:
+  first_after_days: 7
+  second_after_days: 8
+  max_followups: 2
+
+# Notifications
+notifications:
+  print_batch_summary: true
+  print_per_application: true
+  print_on_stop: true

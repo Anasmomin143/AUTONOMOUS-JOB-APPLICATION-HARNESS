@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(playwright:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Grep(*)",
+      "Glob(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(sudo:*)"
+    ]
+  },
+  "env": {
+    "PYTHONPATH": "${CLAUDE_PROJECT_DIR}/scripts",
+    "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+    "HARNESS_ROOT": "${CLAUDE_PROJECT_DIR}"
+  }
+}

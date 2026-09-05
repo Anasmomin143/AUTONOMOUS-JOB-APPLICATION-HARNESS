@@ -1,0 +1,56 @@
+# Pre-approved answers to common screening questions.
+# Any question NOT matched here triggers the STOP_ON_UNKNOWN_QUESTION
+# safety and hands off to the user. Add new answers here as they come up.
+#
+# Keys are match patterns (regex, case-insensitive). Values are the
+# literal answer the harness may enter. Never edit values in a way that
+# introduces claims not present in master-profile.md.
+
+answers:
+  # Work authorization
+  - match: "(?i)authorized to work.*india"
+    answer: "Yes"
+  - match: "(?i)require (visa )?sponsorship"
+    answer: "Yes — for roles outside India."
+  - match: "(?i)authorized to work.*(united states|us|usa|america)"
+    answer: "No — I would require sponsorship."
+  - match: "(?i)authorized to work.*(uk|united kingdom|britain)"
+    answer: "No — I would require sponsorship."
+  - match: "(?i)authorized to work.*(eu|europe|schengen)"
+    answer: "No — I would require sponsorship."
+
+  # Experience
+  - match: "(?i)years of (professional )?experience"
+    answer: "4"
+  - match: "(?i)years.*(react|next\\.?js|angular|typescript)"
+    answer: "4"
+
+  # Notice period
+  - match: "(?i)notice period"
+    answer: "TODO(user) — set in preferences.md, then here"
+
+  # Current location
+  - match: "(?i)current (city|location|address)"
+    answer: "Hyderabad, India"
+  - match: "(?i)willing to relocate"
+    answer: "TODO(user) — set in preferences.md"
+
+  # Salary
+  - match: "(?i)(expected|current) (ctc|salary|compensation)"
+    answer: "TODO(user) — set in preferences.md"
+
+  # Contact
+  - match: "(?i)phone|mobile"
+    answer: "+91-7276026626"
+  - match: "(?i)linkedin"
+    answer: "https://linkedin.com/in/abdulrahemananas"
+  - match: "(?i)github|portfolio"
+    answer: "https://github.com/anasmomin143"
+
+  # Demographic / EEO — always stop, do not auto-answer.
+  - match: "(?i)(gender|race|ethnicity|disability|veteran|voluntary self.identification)"
+    answer: "__STOP_FOR_USER__"
+
+  # Legal attestations — always stop.
+  - match: "(?i)(agree|attest|certify).*(true|accurate|correct)"
+    answer: "__STOP_FOR_USER__"
