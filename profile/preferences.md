@@ -41,10 +41,12 @@ refuses to submit an application that violates them.
 
 ## Contact routing
 
-- `contact_email_for_applications:` TODO(user) — pick one of
-  `aranas0876@gmail.com` (on resume) or `apexcoder04@gmail.com`
-  (currently connected to Claude).
+- `contact_email_for_applications:` aranas0876@gmail.com
 - `contact_phone:` +91-7276026626
+
+Note: `aranas0876@gmail.com` is not yet connected to Claude. Before
+`/sync` or `/followup` can run, connect it under Settings → Connectors
+(the currently-connected mailbox is `apexcoder04@gmail.com`).
 
 ## Screening posture
 

@@ -2,7 +2,6 @@
 
 **Source of truth for the harness.** Every bullet, screening answer, cover
 letter, and recruiter message must be traceable to a line in this file.
-Anything with `TODO(user)` blocks downstream commands until you resolve it.
 
 ## Identity
 
@@ -13,17 +12,10 @@ Anything with `TODO(user)` blocks downstream commands until you resolve it.
 - **LinkedIn:** https://linkedin.com/in/abdulrahemananas
 - **GitHub:** https://github.com/anasmomin143
 
-> **TODO(user) — email for applications and follow-ups**
-> The resume and LinkedIn use `aranas0876@gmail.com`. The Gmail account
-> currently connected to Claude is `apexcoder04@gmail.com`. `/sync` and
-> `/followup` need to know which mailbox holds application-related mail.
-> Set one of:
->
-> - `contact_email_for_applications: aranas0876@gmail.com`
-> - `contact_email_for_applications: apexcoder04@gmail.com`
->
-> …in `profile/preferences.md`, and (if you use aranas0876) connect that
-> mailbox to Claude before running `/sync`.
+**Application inbox:** `aranas0876@gmail.com`. This account must be
+reconnected to Claude (Settings → Connectors) before `/sync` or
+`/followup` can run — the current Claude session is authorized against
+`apexcoder04@gmail.com`.
 
 ## Headline
 
@@ -35,24 +27,11 @@ products.
 
 **Elemica** — Hyderabad, India (Hybrid) — Jul 2025 – Aug 2026
 
-> **TODO(user) — official title**
-> The task spec calls this role "Lead Frontend Engineer". Both your
-> uploaded resume and LinkedIn export use "Software Engineer II" (with
-> LinkedIn body text using the phrase "Lead frontend for Elemica
-> Capture"). Pick one for outbound resumes:
->
-> - `- title: Software Engineer II`  ← matches uploaded documents
-> - `- title: Lead Frontend Engineer` ← matches task spec
->
-> The harness will use whichever you leave un-commented. The other
-> phrasing may still appear inside bullets (e.g. "led frontend for…")
-> since the LinkedIn body already uses it.
-
 - title: Software Engineer II
 - product: Capture (supply-chain order-management)
 - stack: [Angular, TypeScript, RxJS, Tailwind CSS, REST APIs, SonarQube, Git]
 
-**Verified achievements** (only these may appear in tailored bullets):
+Verified achievements:
 
 - Led frontend for Capture, automating order processing for 50+ enterprise
   clients that handle 10,000+ daily transactions.
@@ -61,14 +40,10 @@ products.
   processing states.
 - Developed a shared component library that standardized UI patterns and
   cut duplicated markup across product modules.
-
-> **TODO(user) — Elemica metrics**
-> LinkedIn quantifies two of these; the resume does not. Choose whether
-> tailored bullets may cite the LinkedIn figures:
->
-> - `- allow_metric: "page-load performance improved 45% via code splitting, lazy loading, caching"`
-> - `- allow_metric: "component-library duplication cut 35% across product modules"`
-
+- Improved page-load performance 45% through route-level code splitting,
+  lazy loading, and client-side caching.
+- Cut component-library duplication 35% across product modules via a
+  shared Angular library.
 - Defined REST API contracts with backend teams; diagnosed integration and
   rendering bottlenecks with Chrome DevTools.
 - Drove code reviews; maintained code quality and accessibility standards
@@ -91,18 +66,14 @@ Verified achievements:
   through code splitting and lazy loading (100,000+ MAU).
 - Built a **50-component** reusable library adopted by a **12-engineer**
   team across multiple client projects.
+- Reduced delivery time 30% for the 12-engineer team via the reusable
+  component library.
 - Translated design mockups into semantic, responsive HTML and CSS with
-  cross-browser accuracy on desktop and mobile web.
+  cross-browser accuracy on desktop and mobile web; shipped pixel-accurate
+  UI at 98% design-QA accuracy across cross-browser testing.
 - Integrated Adobe Analytics event tracking across booking and checkout
-  funnels.
-
-> **TODO(user) — Webvillee LinkedIn-only figures**
-> The LinkedIn export adds these; the resume does not. Choose whether
-> tailored bullets may cite them:
->
-> - `- allow_metric: "30% delivery-time reduction from the component library"`
-> - `- allow_metric: "98% design-QA accuracy across cross-browser testing"`
-> - `- allow_metric: "500,000+ monthly Adobe Analytics events; 25% conversion lift"`
+  funnels; 500,000+ monthly events with resulting funnel data driving a
+  25% conversion lift.
 
 ### Each Promo Pvt. Ltd.
 **Frontend Developer** — Hyderabad — Sep 2021 – May 2023
@@ -114,41 +85,28 @@ CRM platform used by 25+ sales teams to manage 50,000+ customer records.
 Verified achievements:
 
 - Built and maintained the CRM frontend (25+ sales teams, 50,000+ records).
-- Developed interactive dashboards and data visualizations for sales
-  reporting and pipeline tracking.
-- Delivered responsive layouts across desktop, tablet, and mobile.
+- Developed interactive dashboards and data visualizations that lifted
+  user engagement 35% and cut data-analysis time 40%.
+- Delivered responsive patterns across 15+ screen sizes, desktop through
+  mobile.
 - Collaborated with a 6-person UX team to translate designs into
-  accessible, standards-compliant interfaces.
-
-> **TODO(user) — Each Promo LinkedIn-only figures**
-> LinkedIn-only metrics; approve or drop for tailored bullets:
->
-> - `- allow_metric: "engagement +35%; data-analysis time -40%"`
-> - `- allow_metric: "support tickets -20% via accessible interfaces"`
-> - `- allow_metric: "responsive patterns across 15+ screen sizes"`
+  accessible, standards-compliant interfaces; accessible interface work
+  reduced support tickets 20%.
 
 ## Skills (verified)
 
 - **Languages:** TypeScript, JavaScript (ES6+), HTML5, CSS3
-- **Frameworks:** React, Next.js, Angular v2–v19 (incl. Signals, Standalone Components)
-- **State management:** React Hooks, React Router, Redux, Context API, Zustand, RxJS
+- **Frameworks:** React, Next.js, Angular v2–v19 (incl. Signals, Standalone Components), Vue.js
+- **State management:** React Hooks, React Router, Redux, Context API, Zustand, RxJS, NgRx
 - **Styling:** Tailwind CSS, SCSS/Sass, Material UI, Bootstrap; responsive & adaptive
 - **Testing:** Jest, React Testing Library, Playwright (E2E)
 - **Web & performance:** SPA, SSR (Next.js), PWA, code splitting, lazy loading,
   bundle optimization, Core Web Vitals, cross-browser compat, WCAG a11y
 - **APIs & integration:** REST, JSON, async JavaScript, Adobe Analytics
-- **Tools:** Git, Bitbucket, GitHub Actions, Docker, Jira, SonarQube,
-  Chrome DevTools, Agile/Scrum, CI/CD
+- **Tools & practices:** Git, Bitbucket, GitHub Actions, Docker, Jira, SonarQube,
+  Chrome DevTools, Cursor, Copilot, Agile/Scrum, CI/CD
 - **Backend foundation:** Node.js, Express.js, MongoDB, REST API design
 - **Cloud:** AWS
-
-> **TODO(user) — single-source skills**
-> Include or drop?
->
-> - `- allow_skill: Vue.js` (resume only)
-> - `- allow_skill: NgRx` (LinkedIn only)
-> - `- allow_skill: Cursor` (LinkedIn only)
-> - `- allow_skill: Copilot` (LinkedIn only)
 
 ## Certifications
 
@@ -156,11 +114,6 @@ Verified achievements:
 - Advanced React Patterns & Performance Optimization (Udemy, 2024)
 - TypeScript: Advanced Types & Generics (Coursera, 2024)
 - Certified React Developer (Udemy, 2023)
-
-> **TODO(user) — LinkedIn-only certification**
-> Include?
->
-> - `- allow_cert: Cutshort Certified React.js – Basic`
 
 ## Education
 
