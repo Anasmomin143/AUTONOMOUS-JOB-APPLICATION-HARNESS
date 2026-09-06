@@ -24,20 +24,20 @@ refuses to submit an application that violates them.
 - Remote: yes (global time-zone flexibility ≈ ±5h from IST)
 - Hybrid: yes if in Hyderabad or Bengaluru
 - Onsite: only Hyderabad or Bengaluru
-- Willing to relocate: TODO(user) — yes / no
+- Willing to relocate: yes
 - Visa sponsorship required outside India: yes
 
 ## Compensation
 
 - Currency: INR (or USD equivalent for remote-international)
-- Minimum salary INR pa: TODO(user)
-- Preferred salary INR pa: TODO(user)
-- Bonus / equity: TODO(user) — indifferent / preferred / required
+- Minimum salary INR pa: 3000000
+- Preferred salary INR pa: 4500000
+- Bonus / equity: indifferent
 
 ## Availability
 
-- Notice period: TODO(user) — e.g. "30 days"
-- Earliest start: TODO(user) — e.g. "immediate" or a date
+- Notice period: immediate
+- Earliest start: immediate
 
 ## Contact routing
 
@@ -52,8 +52,8 @@ Note: `aranas0876@gmail.com` is not yet connected to Claude. Before
 
 - Willing to complete take-home assignments up to: 4 hours
 - Willing to complete external assessments (HackerRank, Codility, etc.):
-  TODO(user) — yes / no
-- Willing to travel for onsite interviews: TODO(user) — yes / no
+  yes
+- Willing to travel for onsite interviews: yes
 
 ## Company blocklist
 

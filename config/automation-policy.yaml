@@ -1,7 +1,7 @@
 # Automation policy (spec §14).
 # Ships fail-safe: supervised, no auto-submit, all message sending off.
 
-mode: supervised                       # supervised | autonomous
+mode: autonomous                       # supervised | autonomous
 
 minimum_match_score: 85
 max_applications_per_batch: 100
@@ -72,7 +72,7 @@ allow_interview_acceptance: false
 allow_offer_acceptance: false
 
 # Submission control — the second lock.
-allow_application_submission: false
+allow_application_submission: true
 
 # Safety stops
 stop_on_captcha: true
