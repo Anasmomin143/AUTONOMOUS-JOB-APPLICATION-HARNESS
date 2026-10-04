@@ -33,6 +33,7 @@ refuses to submit an application that violates them.
 - Minimum salary INR pa: 3000000
 - Preferred salary INR pa: 4500000
 - Bonus / equity: indifferent
+- Salary on application forms: do not pre-answer — stop and ask per job
 
 ## Availability
 
