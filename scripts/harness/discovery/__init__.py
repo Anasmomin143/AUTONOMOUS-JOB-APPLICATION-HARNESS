@@ -11,12 +11,15 @@ from __future__ import annotations
 import datetime as dt
 from typing import Callable
 
+from .. import filters
 from ..config import Config
 from ..batch import stable_hash
 from . import greenhouse, lever, ashby, linkedin, indeed, naukri, careers_pages
 
 
-SOURCES: dict[str, Callable[[Config], list[dict]]] = {
+# Each fetcher takes (cfg, warnings) and appends per-company problems to
+# `warnings` instead of letting one bad slug abort the whole source.
+SOURCES: dict[str, Callable[[Config, list[str]], list[dict]]] = {
     "greenhouse": greenhouse.fetch,
     "lever":      lever.fetch,
     "ashby":      ashby.fetch,
@@ -53,25 +56,44 @@ def normalize_job(source: str, raw: dict) -> dict:
     }
 
 
-def discover_all(cfg: Config, max_total: int) -> tuple[list[dict], list[str]]:
-    """Returns (normalized_jobs, warnings)."""
+def discover_all(
+    cfg: Config, max_total: int, seen: set[str] | None = None,
+) -> tuple[list[dict], list[str], dict[str, int]]:
+    """Returns (new_jobs, warnings, skipped_counts).
+
+    Jobs already in `seen` (job hashes / URLs) and jobs failing the hard
+    filters are skipped *before* counting toward `max_total` and the
+    per-source cap, so a run returns up to N new, on-target jobs.
+    """
+    seen = set(seen or ())
     collected: list[dict] = []
     warnings: list[str] = []
+    skipped = {"duplicate": 0, "filtered": 0}
     per_source_cap = int(cfg.settings.get("discovery", {}).get("max_per_source_per_run", 200))
 
     for name, fn in SOURCES.items():
         if len(collected) >= max_total:
             break
         try:
-            raw = fn(cfg)
+            raw = fn(cfg, warnings)
         except NotImplementedError as e:
             warnings.append(f"{name}: {e}")
             continue
         except Exception as e:
             warnings.append(f"{name}: unexpected error — {e!r}")
             continue
-        for j in raw[:per_source_cap]:
-            collected.append(normalize_job(name, j))
-            if len(collected) >= max_total:
+        taken = 0
+        for j in raw:
+            job = normalize_job(name, j)
+            if job["job_hash"] in seen or (job["job_url"] and job["job_url"] in seen):
+                skipped["duplicate"] += 1
+                continue
+            if filters.reasons(job, cfg):
+                skipped["filtered"] += 1
+                continue
+            seen.update({job["job_hash"], job["job_url"]})
+            collected.append(job)
+            taken += 1
+            if taken >= per_source_cap or len(collected) >= max_total:
                 break
-    return collected, warnings
+    return collected, warnings, skipped

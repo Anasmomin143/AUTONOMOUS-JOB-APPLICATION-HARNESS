@@ -51,6 +51,16 @@ JOB DISCOVERY
 | `/stop` | Halt automation at the next boundary. |
 | `/mode supervised\|autonomous\|status` | Two-lock autonomous toggle. |
 
+## Tests
+
+```bash
+pip install -e '.[dev]'
+python -m pytest
+```
+
+Tests run against a synthetic profile and config in `tests/fixtures/`,
+never your real `profile/`, `jobs/` or `applications/`.
+
 ## Safety defaults
 
 `config/automation-policy.yaml` ships with:

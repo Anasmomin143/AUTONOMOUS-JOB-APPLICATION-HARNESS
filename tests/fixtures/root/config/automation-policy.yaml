@@ -1,0 +1,15 @@
+mode: supervised
+allow_application_submission: false
+minimum_match_score: 70
+
+allowed_roles:
+  - "(?i)front[- ]?end"
+  - "(?i)react"
+  - "(?i)ui engineer"
+
+allowed_locations:
+  - "(?i)india"
+  - "(?i)remote"
+
+resume_type_default: master
+tailor_when_match_below: 92

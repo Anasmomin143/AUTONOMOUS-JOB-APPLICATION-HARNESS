@@ -20,4 +20,8 @@ Applies the weights from `config/scoring.yaml`. Writes per-job:
 - `classification` (strong | review | low | reject)
 
 Jobs scoring ≥ `thresholds.low` move to `jobs/qualified.json`; the rest
-move to `jobs/rejected.json`. Report totals to the user.
+move to `jobs/rejected.json`. A job failing a hard filter (settings.yaml
+`filters:` + policy `allowed_roles` / `allowed_locations`) is rejected
+whatever its score, with the reasons in `filter_reasons`. Every rescored
+job is re-bucketed, so it never sits in both files. Report totals to the
+user.

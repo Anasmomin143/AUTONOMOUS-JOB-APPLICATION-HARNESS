@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..config import Config
 
 
-def fetch(cfg: Config) -> list[dict]:
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     cfg_n = (cfg.settings.get("discovery", {}) or {}).get("naukri") or {}
     if not cfg_n.get("enabled"):
         return []

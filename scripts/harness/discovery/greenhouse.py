@@ -10,7 +10,27 @@ import httpx
 from ..config import Config
 
 
-def fetch(cfg: Config) -> list[dict]:
+def get_json(client: httpx.Client, url: str, label: str, warnings: list[str] | None):
+    """GET `url` as JSON; on any failure record `label: reason` and return
+    None so the caller moves on to the next company."""
+    try:
+        r = client.get(url)
+    except httpx.HTTPError as e:
+        reason = repr(e)
+    else:
+        if r.status_code != 200:
+            reason = f"HTTP {r.status_code}"
+        else:
+            try:
+                return r.json()
+            except ValueError:
+                reason = "response was not JSON"
+    if warnings is not None:
+        warnings.append(f"{label}: {reason}")
+    return None
+
+
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     slugs: list[str] = list((cfg.settings.get("discovery", {}) or {}).get("greenhouse_slugs") or [])
     out: list[dict] = []
     if not slugs:
@@ -18,10 +38,9 @@ def fetch(cfg: Config) -> list[dict]:
     with httpx.Client(timeout=20.0, follow_redirects=True) as client:
         for slug in slugs:
             url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true"
-            r = client.get(url)
-            if r.status_code != 200:
+            data = get_json(client, url, f"greenhouse/{slug}", warnings)
+            if not isinstance(data, dict):
                 continue
-            data = r.json()
             for j in data.get("jobs", []):
                 loc = (j.get("location") or {}).get("name", "")
                 desc_html = j.get("content") or ""

@@ -8,10 +8,10 @@ import re
 import httpx
 
 from ..config import Config
-from .greenhouse import _infer_mode, _extract_stack
+from .greenhouse import _infer_mode, _extract_stack, get_json
 
 
-def fetch(cfg: Config) -> list[dict]:
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     slugs: list[str] = list((cfg.settings.get("discovery", {}) or {}).get("ashby_slugs") or [])
     out: list[dict] = []
     if not slugs:
@@ -19,10 +19,9 @@ def fetch(cfg: Config) -> list[dict]:
     with httpx.Client(timeout=20.0, follow_redirects=True) as client:
         for slug in slugs:
             url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true"
-            r = client.get(url)
-            if r.status_code != 200:
+            data = get_json(client, url, f"ashby/{slug}", warnings)
+            if not isinstance(data, dict):
                 continue
-            data = r.json()
             for j in data.get("jobs", []):
                 loc = j.get("location") or ""
                 desc = j.get("descriptionPlain") or ""

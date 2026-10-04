@@ -81,12 +81,12 @@ def load_profile() -> ProfileFacts:
     # Skills — under "## Skills (verified)" section
     skills_section = _section(md, "Skills (verified)") or _section(md, "Skills")
     if skills_section:
-        for line in skills_section.splitlines():
-            m = re.match(r"^\s*-\s*\*\*(.+?):\*\*\s*(.+)$", line)
-            if not m:
-                continue
-            for tok in re.split(r"[,;]", m.group(2)):
-                tok = re.sub(r"\(.*?\)", "", tok).strip(" .")
+        for item in _skill_bullets(skills_section):
+            # Drop parentheticals first so commas inside them don't split
+            # a skill in two ("Angular v2–v19 (incl. Signals, …)").
+            item = re.sub(r"\([^)]*\)", "", item)
+            for tok in re.split(r"[,;]", item):
+                tok = tok.strip(" .")
                 if tok and not tok.lower().startswith("todo"):
                     facts.skills.append(tok)
 
@@ -138,6 +138,19 @@ def load_profile() -> ProfileFacts:
     # Total years experience — compute from date ranges
     facts.total_years_experience = _sum_years(md)
     return facts
+
+
+def _skill_bullets(section: str) -> list[str]:
+    """Values of `- **Label:** a, b, c` bullets, joining indented
+    continuation lines onto the bullet they wrap from."""
+    items: list[str] = []
+    for line in section.splitlines():
+        m = _SKILL_LINE_RX.match(line)
+        if m:
+            items.append(m.group(2).strip())
+        elif items and line.startswith((" ", "\t")) and line.strip():
+            items[-1] += " " + line.strip()
+    return items
 
 
 def _section(md: str, heading: str) -> str:

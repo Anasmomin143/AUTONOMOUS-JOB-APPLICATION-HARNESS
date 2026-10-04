@@ -19,7 +19,10 @@ class ValidationResult:
 
 
 # Metrics not present in master are the highest-severity failure.
-_METRIC_RX = re.compile(r"(\d{1,3}(?:,\d{3})*|\d+)\s*(%|percent|\+|x|users?|clients?|days?|weeks?)")
+# `[ \t]` rather than `\s` throughout: a match must not run across a line
+# break and glue two unrelated lines into one "claim".
+_METRIC_RX = re.compile(r"(\d{1,3}(?:,\d{3})*|\d+)[ \t]*(%|percent|\+|x|users?|clients?|days?|weeks?)")
+_PROPER_NOUN_RX = re.compile(r"\b([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){1,3})\b")
 
 
 def validate(markdown: str, profile: ProfileFacts) -> ValidationResult:
@@ -38,7 +41,7 @@ def validate(markdown: str, profile: ProfileFacts) -> ValidationResult:
     # Reject any capitalized multi-word phrase that looks like an employer
     # but is not in profile.employers.
     known_lc = {e.lower() for e in profile.employers}
-    for m in re.finditer(r"\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\b", markdown):
+    for m in _PROPER_NOUN_RX.finditer(markdown):
         phrase = m.group(1)
         if len(phrase.split()) <= 1:
             continue

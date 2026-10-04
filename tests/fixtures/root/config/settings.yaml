@@ -1,0 +1,18 @@
+discovery:
+  greenhouse_slugs: [broken, acme]
+  lever_slugs: []
+  ashby_slugs: []
+  careers_urls: []
+  max_per_source_per_run: 200
+
+filters:
+  max_experience_years: 8
+  target_role_patterns:
+    - "(?i)front[- ]?end"
+    - "(?i)react"
+    - "(?i)ui engineer"
+  company_blocklist: [blockedco]
+  title_blocklist:
+    - "(?i)principal"
+    - "(?i)staff"
+    - "(?i)manager"
