@@ -13,7 +13,7 @@ from __future__ import annotations
 from ..config import Config
 
 
-def fetch(cfg: Config) -> list[dict]:
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     li = (cfg.settings.get("discovery", {}) or {}).get("linkedin") or {}
     if not li.get("enabled"):
         return []

@@ -3,9 +3,10 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import random
+import re
 from typing import Iterable
 
-from .paths import COUNTERS_JSON
+from .paths import APPLICATIONS_JSON, COUNTERS_JSON
 from .state import read_json, write_json
 
 
@@ -13,11 +14,24 @@ def _counters() -> dict:
     return read_json(COUNTERS_JSON, {"app_seq": {}, "batch_seq": {}})
 
 
+def _max_recorded(field: str, prefix: str) -> int:
+    """Highest sequence number already used in applications.json for IDs
+    shaped `<prefix><seq>`. The counters file lives in gitignored state/,
+    so on a fresh clone it starts empty while applications.json does not."""
+    rx = re.compile(rf"^{re.escape(prefix)}(\d+)$")
+    best = 0
+    for a in read_json(APPLICATIONS_JSON, {"applications": []}).get("applications", []):
+        m = rx.match(str(a.get(field) or ""))
+        if m:
+            best = max(best, int(m.group(1)))
+    return best
+
+
 def mint_application_id() -> str:
     year = dt.date.today().year
     c = _counters()
     seq_by_year = c.setdefault("app_seq", {})
-    seq = int(seq_by_year.get(str(year), 0)) + 1
+    seq = max(int(seq_by_year.get(str(year), 0)), _max_recorded("application_id", f"APP-{year}-")) + 1
     seq_by_year[str(year)] = seq
     write_json(COUNTERS_JSON, c)
     return f"APP-{year}-{seq:04d}"
@@ -27,7 +41,7 @@ def mint_batch_id() -> str:
     day = dt.date.today().isoformat()
     c = _counters()
     seq_by_day = c.setdefault("batch_seq", {})
-    seq = int(seq_by_day.get(day, 0)) + 1
+    seq = max(int(seq_by_day.get(day, 0)), _max_recorded("batch_id", f"BATCH-{day}-")) + 1
     seq_by_day[day] = seq
     write_json(COUNTERS_JSON, c)
     return f"BATCH-{day}-{seq:03d}"

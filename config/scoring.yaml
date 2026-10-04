@@ -1,6 +1,6 @@
 # Scoring weights sum to 100 (spec §5).
-# Change with care: any change is applied to newly-scored jobs only;
-# existing scores are not recomputed unless you run /score-all --rescore.
+# Change with care: /score-all recomputes every discovered job with the
+# current weights and re-buckets it into qualified.json / rejected.json.
 
 weights:
   technical_skills:       30
@@ -16,7 +16,7 @@ weights:
 # Each match in the JD adds to the sub-score; matches are capped at 1x per token.
 skill_synonyms:
   react: [react, react.js, reactjs]
-  next: [next, next.js, nextjs]
+  next: [next.js, nextjs]          # not bare "next" — matches "next steps"
   angular: [angular, angular.js, angularjs]
   typescript: [typescript, ts]
   javascript: [javascript, js, ecmascript]

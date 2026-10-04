@@ -13,7 +13,7 @@ import httpx
 from ..config import Config
 
 
-def fetch(cfg: Config) -> list[dict]:
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     urls: list[str] = list((cfg.settings.get("discovery", {}) or {}).get("careers_urls") or [])
     out: list[dict] = []
     if not urls:
@@ -26,11 +26,15 @@ def fetch(cfg: Config) -> list[dict]:
         for url in urls:
             try:
                 r = client.get(url)
-                if r.status_code != 200:
-                    continue
-                out.extend(_extract(url, r.text))
-            except httpx.HTTPError:
+            except httpx.HTTPError as e:
+                if warnings is not None:
+                    warnings.append(f"careers_page/{url}: {e!r}")
                 continue
+            if r.status_code != 200:
+                if warnings is not None:
+                    warnings.append(f"careers_page/{url}: HTTP {r.status_code}")
+                continue
+            out.extend(_extract(url, r.text))
     return out
 
 

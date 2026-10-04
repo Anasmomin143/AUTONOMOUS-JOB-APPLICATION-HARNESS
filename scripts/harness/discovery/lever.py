@@ -8,10 +8,10 @@ import re
 import httpx
 
 from ..config import Config
-from .greenhouse import _infer_mode, _extract_stack
+from .greenhouse import _infer_mode, _extract_stack, get_json
 
 
-def fetch(cfg: Config) -> list[dict]:
+def fetch(cfg: Config, warnings: list[str] | None = None) -> list[dict]:
     slugs: list[str] = list((cfg.settings.get("discovery", {}) or {}).get("lever_slugs") or [])
     out: list[dict] = []
     if not slugs:
@@ -19,10 +19,10 @@ def fetch(cfg: Config) -> list[dict]:
     with httpx.Client(timeout=20.0, follow_redirects=True) as client:
         for slug in slugs:
             url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
-            r = client.get(url)
-            if r.status_code != 200:
+            data = get_json(client, url, f"lever/{slug}", warnings)
+            if not isinstance(data, list):
                 continue
-            for j in r.json():
+            for j in data:
                 cats = j.get("categories") or {}
                 loc = cats.get("location") or ""
                 desc_html = j.get("descriptionPlain") or j.get("description") or ""

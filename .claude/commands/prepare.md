@@ -23,3 +23,10 @@ cd "$CLAUDE_PROJECT_DIR" && PYTHONPATH="$CLAUDE_PROJECT_DIR/scripts" python -m h
 If the validator rejects the tailored resume, DO NOT proceed. Show the
 rejection reasons to the user and ask what to change in
 `profile/master-profile.md`.
+
+The CLI also refuses, recording nothing:
+
+- exit 7 — the job already has an application (same URL, company +
+  requisition ID, or company + role). Never apply twice; use `/retry`.
+- exit 8 — the resume file is missing (`profile/master-resume.pdf`) or
+  the tailored PDF failed to render.

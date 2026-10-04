@@ -1,0 +1,28 @@
+weights:
+  technical_skills:       30
+  relevant_experience:    25
+  responsibilities:       20
+  domain_experience:      10
+  seniority:               5
+  ats_keyword_alignment:   5
+  education_and_other:     5
+
+skill_synonyms:
+  react: [react, react.js, reactjs]
+  next: [next.js, nextjs]
+  angular: [angular, angular.js, angularjs]
+  typescript: [typescript, ts]
+  javascript: [javascript, js, ecmascript]
+  rxjs: [rxjs]
+  tailwind: [tailwind, tailwindcss]
+  jest: [jest]
+  vue: [vue, vue.js]
+
+thresholds:
+  strong: 90
+  review: 80
+  low:    70
+
+domains:
+  supply_chain: [supply chain, logistics, order management]
+  travel:       [travel, booking, hotel]

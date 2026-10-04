@@ -12,6 +12,7 @@ from pathlib import Path
 
 from . import batch as batch_mod
 from . import discovery
+from . import filters as filters_mod
 from . import modes
 from . import paths as P
 from . import scoring as scoring_mod
@@ -178,14 +179,18 @@ def cmd_find_jobs(args) -> int:
     cfg = Config.load()
     n = int(args.count)
     activity.log(None, "DISCOVER_START", f"target={n}")
-    jobs, warnings = discovery.discover_all(cfg, n)
-    # Dedupe against archive + existing discovered
-    seen = { (j.get("job_hash") or j.get("job_url")) for j in _load_jobs("archive") + _load_jobs("discovered") }
-    fresh = [j for j in jobs if (j.get("job_hash") or j.get("job_url")) not in seen]
+    # Dedupe against archive + existing discovered *inside* discovery, so
+    # already-seen jobs don't use up the requested count.
+    known = _load_jobs("archive") + _load_jobs("discovered")
+    seen = {k for j in known for k in (j.get("job_hash"), j.get("job_url")) if k}
+    fresh, warnings, skipped = discovery.discover_all(cfg, n, seen)
     all_discovered = _load_jobs("discovered") + fresh
     _save_jobs("discovered", all_discovered)
-    activity.log(None, "DISCOVER_DONE", f"new={len(fresh)} total={len(all_discovered)}")
+    activity.log(None, "DISCOVER_DONE", f"new={len(fresh)} total={len(all_discovered)} "
+                 f"skipped_duplicate={skipped['duplicate']} skipped_filtered={skipped['filtered']}")
     print(f"Discovered {len(fresh)} new jobs (total pool: {len(all_discovered)}).")
+    print(f"Skipped {skipped['duplicate']} already-seen and {skipped['filtered']} "
+          f"off-target (hard filters) postings.")
     if warnings:
         print("Warnings:")
         for w in warnings:
@@ -204,34 +209,43 @@ def cmd_score(args) -> int:
 
     jobs = _load_jobs("discovered")
     target_hash = args.job
-    updated = 0
-    qualified = _load_jobs("qualified")
-    rejected  = _load_jobs("rejected")
-    qual_hashes = {j.get("job_hash") for j in qualified}
-    rej_hashes = {j.get("job_hash") for j in rejected}
+    low = int(cfg.scoring.get("thresholds", {}).get("low", 70))
+    rescored: list[dict] = []
+    filtered = 0
 
     for j in jobs:
         if target_hash and j.get("job_hash") != target_hash and j.get("requisition_id") != target_hash:
             continue
         s = scoring_mod.score_job(j, cfg, profile)
+        reasons = filters_mod.reasons(j, cfg)
         j["match_score"] = s.total
         j["score_breakdown"] = s.breakdown
         j["score_rationale"] = s.rationale
         j["classification"] = s.classification
-        updated += 1
-        # Move into qualified / rejected buckets by threshold
-        if s.total >= int(cfg.scoring.get("thresholds", {}).get("low", 70)):
-            if j.get("job_hash") not in qual_hashes:
-                qualified.append(j); qual_hashes.add(j.get("job_hash"))
-        else:
-            if j.get("job_hash") not in rej_hashes:
-                rejected.append(j); rej_hashes.add(j.get("job_hash"))
+        j["filter_reasons"] = reasons
+        if reasons:
+            j["classification"] = "reject"
+            j["score_rationale"] = "Filtered: " + "; ".join(reasons) + " | " + s.rationale
+            filtered += 1
+        rescored.append(j)
+
+    # Re-bucket every rescored job, so a job whose score or filters changed
+    # leaves its old bucket instead of sitting in both.
+    def _qualifies(j: dict) -> bool:
+        return not j["filter_reasons"] and j["match_score"] >= low
+
+    hashes = {j.get("job_hash") for j in rescored}
+    qualified = [q for q in _load_jobs("qualified") if q.get("job_hash") not in hashes]
+    rejected = [r for r in _load_jobs("rejected") if r.get("job_hash") not in hashes]
+    qualified += [j for j in rescored if _qualifies(j)]
+    rejected += [j for j in rescored if not _qualifies(j)]
 
     _save_jobs("discovered", jobs)
     _save_jobs("qualified", qualified)
     _save_jobs("rejected", rejected)
-    activity.log(None, "SCORE_DONE", f"updated={updated}")
-    print(f"Scored {updated} jobs. Qualified: {len(qualified)}. Rejected: {len(rejected)}.")
+    activity.log(None, "SCORE_DONE", f"updated={len(rescored)} filtered={filtered}")
+    print(f"Scored {len(rescored)} jobs ({filtered} failed hard filters). "
+          f"Qualified: {len(qualified)}. Rejected: {len(rejected)}.")
     return 0
 
 
@@ -249,6 +263,28 @@ def _find_qualified(job_id: str) -> dict | None:
     return None
 
 
+def _norm(s) -> str:
+    return " ".join(str(s or "").lower().split())
+
+
+def _existing_application(job: dict) -> dict | None:
+    """The application already recorded for `job`, matched by job URL,
+    company + requisition ID, or company + role (CLAUDE.md: never apply twice)."""
+    url = _norm(job.get("job_url"))
+    company = _norm(job.get("company"))
+    req = _norm(job.get("requisition_id"))
+    role = _norm(job.get("role"))
+    for a in _load_apps().get("applications", []):
+        if url and _norm(a.get("job_url")) == url:
+            return a
+        if company and _norm(a.get("company")) == company:
+            if req and _norm(a.get("requisition_id")) == req:
+                return a
+            if role and _norm(a.get("role")) == role:
+                return a
+    return None
+
+
 def cmd_prepare(args) -> int:
     cfg = Config.load()
     profile = load_profile()
@@ -263,12 +299,22 @@ def cmd_prepare(args) -> int:
         print(f"Job {args.job_id!r} not found in qualified list.")
         return 3
 
+    existing = _existing_application(job)
+    if existing:
+        print(f"Refused: already prepared as {existing.get('application_id')} "
+              f"({existing.get('company')} — {existing.get('role')}, status {existing.get('status')}). "
+              f"Never apply twice; use /retry for a failed application.")
+        return 7
+
     resume_type, resume_reason = decide_mod.decide(job, int(job.get("match_score", 0)), cfg, profile)
     print(f"Resume decision: {resume_type.upper()} — {resume_reason}")
 
     resume_path: Path
     if resume_type == "master":
         resume_path = P.MASTER_RESUME_PDF
+        if not resume_path.is_file():
+            print(f"Refused: master resume not found at {resume_path}. Drop your resume PDF there and re-run.")
+            return 8
     else:
         tr = tailor_mod.tailor(job, profile)
         vr = validate_mod.validate(tr.markdown, profile)
@@ -279,6 +325,11 @@ def cmd_prepare(args) -> int:
         fname = f"{_slug(job.get('company','x'))}_{_slug(job.get('role','x'))}_{app_id_placeholder}.pdf"
         out = P.RESUMES_DIR / "tailored" / fname
         resume_path = render_mod.render(tr.markdown, out)
+        if resume_path.suffix.lower() != ".pdf" or not resume_path.is_file():
+            # render() falls back to .md/.html when WeasyPrint fails; an
+            # HTML file is not an uploadable resume.
+            print(f"Refused: PDF rendering failed; Markdown/HTML fallback written next to {out}.")
+            return 8
         job["_tailored_app_id"] = app_id_placeholder
 
     # Register application
@@ -290,6 +341,8 @@ def cmd_prepare(args) -> int:
         "company":         job.get("company"),
         "role":            job.get("role"),
         "job_url":         job.get("job_url"),
+        "job_hash":        job.get("job_hash"),
+        "requisition_id":  job.get("requisition_id"),
         "job_source":      job.get("source"),
         "location":        job.get("location"),
         "work_mode":       job.get("work_mode"),
