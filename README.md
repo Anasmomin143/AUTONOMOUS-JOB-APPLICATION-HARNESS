@@ -25,8 +25,9 @@ JOB DISCOVERY
 ## First-run setup
 
 1. `pip install -e .` (installs `harness` CLI + Python deps).
-2. `python -m playwright install chromium` is **not** required — the
-   pre-installed browser at `/opt/pw-browsers/chromium` is used.
+2. `python -m playwright install chromium` on a laptop. Cloud containers
+   with Chromium at `/opt/pw-browsers/chromium` use that instead; set
+   `HARNESS_CHROMIUM=/path/to/chrome` to force a specific binary.
 3. Open Claude Code in this repo and run `/bootstrap`.
 4. Resolve every `TODO(user)` block in `profile/master-profile.md`
    (six known conflicts between your resume and LinkedIn are marked).
@@ -44,6 +45,7 @@ JOB DISCOVERY
 | `/research <company>` | Build a company brief. |
 | `/prepare <id>` | Full prep: resume decide → tailor → validate → render → questions. |
 | `/apply <n>` [`random`] [`--score N`] [`--role …`] [`--location …`] | Batch preparation & (supervised) submission. |
+| `/submit <APP-ID>` | Fill one prepared application in a visible browser; submit only on your YES; verify the confirmation. |
 | `/sync` | Reconcile applications against Gmail + ATS. |
 | `/followup` | Draft follow-ups (send requires approval). |
 | `/status` | Dashboard. |

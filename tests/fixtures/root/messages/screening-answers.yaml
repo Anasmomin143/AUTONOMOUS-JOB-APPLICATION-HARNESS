@@ -1,0 +1,11 @@
+answers:
+  - match: "(?i)authorized to work.*india"
+    answer: "Yes"
+  - match: "(?i)require (visa )?sponsorship"
+    answer: "Yes — for roles outside India."
+  - match: "(?i)notice period"
+    answer: "Immediate"
+  - match: "(?i)(expected|current) (ctc|salary|compensation)"
+    answer: "__STOP_FOR_USER__"
+  - match: "(?i)(gender|race|ethnicity|disability|veteran)"
+    answer: "__STOP_FOR_USER__"

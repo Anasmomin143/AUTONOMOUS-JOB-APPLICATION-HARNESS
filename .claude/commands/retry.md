@@ -12,6 +12,9 @@ allowed-tools:
 cd "$CLAUDE_PROJECT_DIR" && PYTHONPATH="$CLAUDE_PROJECT_DIR/scripts" python -m harness.cli retry "$1"
 ```
 
-Marks the application `RETRY_PENDING`. Re-run `/apply 1 --role …` (or a
-targeted `/apply`) to re-enter the browser flow from the last saved
-checkpoint under `applications/<APP-ID>/checkpoints/`.
+Marks a `FAILED` or `DECLINED` application `RETRY_PENDING` (anything
+else is refused). Then `/submit <APP-ID>` runs the
+browser flow again from the start of the form (the last run's
+checkpoints and screenshots are under `applications/<APP-ID>/`). Never
+retry a `SUBMIT_UNVERIFIED` application — it may already have been
+received; ask the user to check first.

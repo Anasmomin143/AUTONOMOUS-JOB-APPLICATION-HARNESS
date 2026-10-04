@@ -16,6 +16,8 @@ from .paths import MASTER_PROFILE_MD
 @dataclass
 class ProfileFacts:
     name: str = ""
+    first_name: str = ""
+    last_name: str = ""
     location: str = ""
     email: str = ""
     phone: str = ""
@@ -68,6 +70,12 @@ def load_profile() -> ProfileFacts:
 
     # Identity block
     m = re.search(r"\*\*Name:\*\*\s*(.+)", md);          facts.name = m.group(1).strip() if m else ""
+    # Optional explicit split for forms; otherwise the last word is the
+    # last name ("Abdul Raheman Anas" -> "Abdul Raheman" / "Anas").
+    m = re.search(r"\*\*First name:\*\*\s*(.+)", md, re.I)
+    facts.first_name = m.group(1).strip() if m else " ".join(facts.name.split()[:-1]) or facts.name
+    m = re.search(r"\*\*Last name:\*\*\s*(.+)", md, re.I)
+    facts.last_name = m.group(1).strip() if m else (facts.name.split()[-1] if len(facts.name.split()) > 1 else "")
     m = re.search(r"\*\*Location:\*\*\s*(.+)", md);      facts.location = m.group(1).strip() if m else ""
     m = re.search(r"\*\*Phone:\*\*\s*(.+)", md);         facts.phone = m.group(1).strip() if m else ""
     m = re.search(r"\*\*Email[^:]*:\*\*\s*(.+)", md);    facts.email = m.group(1).strip() if m else ""
