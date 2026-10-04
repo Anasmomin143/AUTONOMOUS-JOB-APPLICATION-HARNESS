@@ -37,7 +37,7 @@ allowed_locations:
 allowed_work_modes: [remote, hybrid, onsite]
 
 # Salary policy (optional; leave null to ignore).
-minimum_salary_inr_pa: null
+minimum_salary_inr_pa: 3000000
 minimum_salary_usd_pa: null
 max_salary_deviation_pct: 20
 
@@ -65,7 +65,7 @@ allow_recruiter_messages: false
 allow_followups: false                 # /followup draft-only until true
 allow_cover_letters: false             # off by default; enable per-role if desired
 allow_custom_questions: true
-allow_external_assessments: false      # skip jobs requiring HackerRank/Codility/etc.
+allow_external_assessments: true       # skip jobs requiring HackerRank/Codility/etc.
 
 # Interview / offer autonomy — HARD-CODED OFF, cannot be enabled by config.
 allow_interview_acceptance: false
