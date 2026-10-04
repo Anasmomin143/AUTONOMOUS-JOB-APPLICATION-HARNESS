@@ -28,6 +28,9 @@ from .tracker import activity, excel as excel_mod
 
 # ---------------------------------------------------------------- helpers
 
+# Submitted, no reply beyond a confirmation yet: a follow-up may be due.
+FOLLOWUP_STATUSES = ("APPLIED", "SUBMITTED", "CONFIRMED")
+
 def _load_apps() -> dict:
     return read_json(P.APPLICATIONS_JSON, {"applications": []})
 
@@ -80,7 +83,8 @@ def _dashboard_counts(apps: list[dict]) -> dict:
         "Interviews":           _has("INTERVIEW"),
         "Offers":               _has("OFFER"),
         "Rejections":           _has("REJECTED"),
-        "Follow-ups Due":       sum(1 for a in apps if a.get("followup_date") and a["followup_date"] <= dt.date.today().isoformat()),
+        "Follow-ups Due":       sum(1 for a in apps if a.get("followup_date") and a["followup_date"] <= dt.date.today().isoformat()
+                                    and a.get("status") in FOLLOWUP_STATUSES),
         "Response Rate":         _rate(_has("INTERVIEW") + _has("ASSESSMENT") + _has("REJECTED"), submitted),
         "Interview Conversion Rate": _rate(_has("INTERVIEW"), submitted),
         "Offer Conversion Rate":     _rate(_has("OFFER"), submitted),
@@ -456,17 +460,28 @@ def cmd_sync(args) -> int:
     from .email.sync import build_search_requests, ingest_mailbox
     if args.ingest:
         r = ingest_mailbox(Path(args.ingest))
-        print(json.dumps(r, indent=2))
+        if "error" in r:
+            print(r["error"])
+            return 3
+        for u in r["updated"]:
+            print(f"UPDATED {u['app_id']}: {u['from']} → {u['to']}  ({u['subject']})")
+            activity.log(u["app_id"], "EMAIL_STATUS", f"{u['from']} -> {u['to']} ({u['subject']})")
+        for v in r["review"]:
+            who = v.get("app_id") or " / ".join(v.get("candidates") or [])
+            print(f"REVIEW {who}: possible {v['signal']} — {v['why']}  ({v['subject']})")
+        print(f"\n{r['messages']} messages: {len(r['updated'])} status changes, {len(r['review'])} for review, "
+              f"{r['ignored']} ignored, {r['already_seen']} already ingested.")
         _sync_excel()
-        activity.log(None, "SYNC_INGEST", json.dumps(r))
+        activity.log(None, "SYNC_INGEST", json.dumps(r, ensure_ascii=False))
         return 0
     apps = _load_apps().get("applications", [])
     reqs = build_search_requests(apps)
     # Emit request envelopes; the slash-command wrapper handles them.
     for r in reqs:
         print(f"HARNESS_REQUEST: gmail_search {json.dumps(r)}")
-    print(f"\nEmitted {len(reqs)} Gmail-search requests. Wrapper: collect results into a JSON "
-          f"file (schema: {{\"messages\": [{{...}}]}}) and re-run `harness sync --ingest <path>`.")
+    print(f"\nEmitted {len(reqs)} Gmail-search requests (submitted applications only). Wrapper: collect "
+          f"the messages into a JSON file (schema: {{\"messages\": [{{\"id\", \"date\", \"from\", "
+          f"\"subject\", \"body\"}}]}}) and re-run `harness sync --ingest <path>`.")
     return 0
 
 
@@ -475,7 +490,7 @@ def cmd_followup(args) -> int:
     apps = _load_apps().get("applications", [])
     today = dt.date.today().isoformat()
     due = [a for a in apps if a.get("followup_date") and a["followup_date"] <= today
-           and a.get("status") in ("APPLIED", "SUBMITTED", "CONFIRMED")]
+           and a.get("status") in FOLLOWUP_STATUSES]
     for a in due:
         print(f"HARNESS_REQUEST: gmail_draft_followup {json.dumps({'app_id': a['application_id']})}")
     print(f"\n{len(due)} follow-ups due. Drafts must be reviewed and sent manually "

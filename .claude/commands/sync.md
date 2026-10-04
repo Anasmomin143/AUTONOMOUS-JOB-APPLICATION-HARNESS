@@ -10,19 +10,32 @@ allowed-tools:
 
 # /sync
 
-Two-step:
+Before searching, check that the connected Gmail account is the one
+applications use (`contact_email_for_applications` in
+`profile/preferences.md`). If it isn't, say so and stop — another inbox
+holds none of the replies.
 
-1. `python -m harness.cli sync` emits `HARNESS_REQUEST: gmail_search
-   {...}` lines, one per application.
+1. `python -m harness.cli sync` emits one `HARNESS_REQUEST: gmail_search
+   {...}` line per **submitted** application, with a query already
+   limited to mail since it was sent.
 2. For each request, call `mcp__Gmail__search_threads` with the given
-   query, then `mcp__Gmail__get_thread` for each hit, collecting
-   `{subject, from, body}` into a single JSON file at
-   `state/mailbox-<timestamp>.json` (schema: `{"messages": [ ... ]}`).
+   query, then `mcp__Gmail__get_thread` for each hit. Write every message
+   into one JSON file at `state/mailbox-<timestamp>.json`:
+   `{"messages": [{"id", "date", "from", "subject", "body"}]}` — `id` is
+   the Gmail message id (re-ingesting is then a no-op), `date` the Date
+   header or Gmail's internal epoch-milliseconds, `body` plain text.
 3. Feed it back:
    `python -m harness.cli sync --ingest state/mailbox-<timestamp>.json`.
-4. The CLI matches messages using ≥2 independent signals, reconciles
-   Tracker vs ATS vs Email statuses, and writes to
-   `applications/applications.json` + Excel.
+4. Report the CLI's `UPDATED` and `REVIEW` lines to the user.
 
-Do NOT update an application on a weak (1-signal) match — the CLI marks
-those `[review]` in notes; escalate to the user instead.
+How the CLI decides (`harness.email`):
+
+- A status changes only when the email names the company (sender domain
+  or text) **and** something specific to the job (role title,
+  requisition ID, application ID or job URL). Your own name is not
+  evidence. Anything weaker becomes a `[review]` note, never a change.
+- Statuses only move forward (APPLIED → CONFIRMED → ASSESSMENT →
+  INTERVIEW); a rejection or offer applies from anywhere. Emails are
+  applied oldest first; mail from before the application is ignored.
+- A `REVIEW` line naming several applications matched them equally —
+  ask the user which one it is; do not edit `applications.json` to guess.
