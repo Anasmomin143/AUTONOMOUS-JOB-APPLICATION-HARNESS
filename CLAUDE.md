@@ -58,16 +58,22 @@ Each `.claude/commands/<name>.md` shells to `python -m harness.cli
   MCP calls itself when the CLI prints a JSON envelope on stdout).
 
 When the CLI prints a line matching `HARNESS_REQUEST: <verb> <json>`,
-the slash-command wrapper is expected to perform that action (Playwright
-launch, MCP tool call, user approval prompt) and echo the result back
-via `harness.cli --resume <request-id>`.
+the slash-command wrapper is expected to perform that action (MCP tool
+call, user prompt). For the browser flow (`harness submit`), the running
+process waits and the answer goes back via
+`harness.cli decide --app-id <APP-ID> <ANSWER>` — see
+`.claude/commands/submit.md`.
 
 ## Approval gate
 
-When `/apply` reaches submission, the CLI prints the APPLICATION READY
-block (see §14 of the spec) and writes
-`applications/<APP-ID>/pending_approval.json`. The slash-command wrapper
-must ask the user `Approve? YES / NO`. Silence is NO.
+`harness submit --app-id <APP-ID>` fills the form, prints the APPLICATION
+READY block (see §14 of the spec), writes
+`applications/<APP-ID>/pending_approval.json` (stage + one-time nonce)
+and waits. The wrapper asks the user `Approve? YES / NO` and runs
+`decide … YES` only on the user's explicit YES. Silence is NO: the
+prompt expires (default 15 min) and nothing is submitted. APPLIED is
+recorded only after a confirmation page is verified; otherwise
+SUBMIT_UNVERIFIED, which is never resubmitted.
 
 ## Autonomous mode
 

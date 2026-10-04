@@ -24,8 +24,6 @@
   },
   "env": {
     "PYTHONPATH": "${CLAUDE_PROJECT_DIR}/scripts",
-    "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
     "HARNESS_ROOT": "${CLAUDE_PROJECT_DIR}"
   }
 }

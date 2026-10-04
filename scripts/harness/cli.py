@@ -141,8 +141,9 @@ def cmd_bootstrap(args) -> int:
     print()
     print(f"Mode: {ms.effective}  (policy.mode={ms.policy_mode}, "
           f"submission_allowed={ms.submission_allowed}, session_confirmed={ms.session_confirmed})")
-    print(f"Playwright browser: {'/opt/pw-browsers/chromium'}"
-          f" ({'FOUND' if Path('/opt/pw-browsers/chromium').exists() else 'MISSING'})")
+    from .automation.playwright_driver import resolved_browser
+    exe, found = resolved_browser()
+    print(f"Playwright browser: {exe} ({'FOUND' if found else 'MISSING — run: python -m playwright install chromium'})")
     return 0
 
 
@@ -413,8 +414,9 @@ def cmd_apply(args) -> int:
         prepared += 1 if r == 0 else 0
 
     print(f"Prepared {prepared} applications in {batch_id}.")
-    print(f"Mode: {ms.effective}. Autosubmit: "
-          f"{'ENABLED' if (ms.effective == 'autonomous' and cfg.submission_allowed) else 'DISABLED (supervised approval required)'}.")
+    print(f"Mode: {ms.effective}. Next: `harness submit --app-id <APP-ID>` for each — "
+          + ("it submits without asking (all autonomous locks set)."
+             if ms.effective == "autonomous" else "it stops for your YES before submitting."))
     return 0
 
 
@@ -432,6 +434,22 @@ def _prepare_one(job: dict, cfg: Config, batch_id: str) -> int:
         _save_apps(apps)
         _sync_excel()
     return rc
+
+
+def cmd_submit(args) -> int:
+    from .automation import runner
+    headless = True if args.headless else None  # None: visible browser when a display exists
+    return runner.run(args.app_id, headless=headless, timeout=args.timeout, poll=args.poll,
+                      on_update=_sync_excel)
+
+
+def cmd_decide(args) -> int:
+    from .automation import gate
+    ok, message = gate.decide(args.app_id, args.decision)
+    print(message)
+    if ok:
+        activity.log(args.app_id, "DECISION", args.decision.upper())
+    return 0 if ok else 2
 
 
 def cmd_sync(args) -> int:
@@ -469,6 +487,13 @@ def cmd_retry(args) -> int:
     apps = _load_apps()
     for a in apps["applications"]:
         if a.get("application_id") == args.app_id:
+            status = (a.get("status") or "").upper()
+            if status not in ("FAILED", "DECLINED"):
+                # Anything past the submit click may already have reached the
+                # employer; retrying it could apply twice.
+                print(f"Refused: {args.app_id} is {status or 'without a status'}; only FAILED or "
+                      f"DECLINED applications can be retried.")
+                return 9
             a["status"] = "RETRY_PENDING"
             a["last_update"] = dt.datetime.now().isoformat(timespec="seconds")
             _save_apps(apps)
@@ -562,6 +587,18 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--role", default=None)
     ap.add_argument("--location", default=None)
     ap.set_defaults(func=cmd_apply)
+
+    sm = sub.add_parser("submit", help="Fill one prepared application and submit it after approval.")
+    sm.add_argument("--app-id", dest="app_id", required=True)
+    sm.add_argument("--timeout", type=float, default=900.0, help="seconds to wait at each prompt; silence is NO")
+    sm.add_argument("--headless", action="store_true", help="no visible browser (no CAPTCHA hand-off)")
+    sm.add_argument("--poll", type=float, default=1.0, help=argparse.SUPPRESS)
+    sm.set_defaults(func=cmd_submit)
+
+    dc = sub.add_parser("decide", help="Answer the prompt a running `submit` is waiting on.")
+    dc.add_argument("--app-id", dest="app_id", required=True)
+    dc.add_argument("decision", help="YES / NO at approval; CONTINUE / NO at input or takeover")
+    dc.set_defaults(func=cmd_decide)
 
     sy = sub.add_parser("sync"); sy.add_argument("--ingest", default=None); sy.set_defaults(func=cmd_sync)
     sub.add_parser("followup").set_defaults(func=cmd_followup)

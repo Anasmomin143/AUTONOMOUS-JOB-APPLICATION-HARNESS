@@ -1,39 +1,64 @@
-"""Playwright driver + approval gate.
+"""Playwright browser session, stop sentinel and checkpoints.
 
-Uses the pre-installed Chromium at /opt/pw-browsers/chromium (see env in
-.claude/settings.json). Every action is checkpointed to
-`applications/<APP-ID>/checkpoints/<step>.json`. Between actions, the
-driver checks for `state/STOP` and halts cleanly.
+Uses the sync Playwright API: the CLI is synchronous and one `submit`
+process drives one application. Every step is checkpointed to
+`applications/<APP-ID>/checkpoints/<step>.json`, and `state/STOP` is
+checked between actions.
 """
 from __future__ import annotations
-import asyncio
 import datetime as dt
 import json
-from dataclasses import dataclass
+import os
 from pathlib import Path
 
-from ..paths import STOP_SENTINEL, app_dir
+from ..paths import R, STOP_SENTINEL, app_dir
 from . import safety
 
-
-@dataclass
-class DriverContext:
-    app_id: str
-    job: dict
-    headless: bool = False
+# Cloud containers ship Chromium here; on a laptop Playwright's own
+# download (`python -m playwright install chromium`) is used instead.
+_CONTAINER_CHROMIUM = Path("/opt/pw-browsers/chromium")
+USER_DATA_DIR = R / ".pw-user-data"
 
 
 class StopRequested(Exception):
-    """Raised when /stop was called between actions."""
+    """/stop was requested; halt before the next action."""
 
 
 class ChallengeDetected(Exception):
-    """CAPTCHA/MFA/OTP — user takeover required."""
+    """CAPTCHA / MFA / OTP on the page — the user must take over."""
 
 
-def _check_stop() -> None:
+def browser_executable() -> str | None:
+    """Chromium binary to launch: $HARNESS_CHROMIUM, then the container
+    path, else None (Playwright's own install)."""
+    env = os.environ.get("HARNESS_CHROMIUM")
+    if env:
+        return env
+    return str(_CONTAINER_CHROMIUM) if _CONTAINER_CHROMIUM.exists() else None
+
+
+def resolved_browser() -> tuple[str, bool]:
+    """(path, exists) of the Chromium `open_browser` will launch."""
+    exe = browser_executable()
+    if exe is None:
+        try:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                exe = p.chromium.executable_path
+        except Exception as e:
+            return f"unresolved ({e!r})", False
+    return exe, Path(exe).exists()
+
+
+def check_stop() -> None:
     if STOP_SENTINEL.exists():
-        raise StopRequested("/stop was requested; halting before next action.")
+        raise StopRequested("/stop was requested; halting before the next action.")
+
+
+def check_challenge(page) -> None:
+    reason = safety.detect(page)
+    if reason:
+        raise ChallengeDetected(reason)
 
 
 def checkpoint(app_id: str, step: str, payload: dict) -> Path:
@@ -45,76 +70,29 @@ def checkpoint(app_id: str, step: str, payload: dict) -> Path:
     return p
 
 
-async def open_browser(user_data_dir: Path | None = None, headless: bool = False):
-    from playwright.async_api import async_playwright
-    p = await async_playwright().start()
-    if user_data_dir:
-        user_data_dir.mkdir(parents=True, exist_ok=True)
-        context = await p.chromium.launch_persistent_context(
-            str(user_data_dir), headless=headless,
-            executable_path="/opt/pw-browsers/chromium" if Path("/opt/pw-browsers/chromium").exists() else None,
-        )
-    else:
-        browser = await p.chromium.launch(headless=headless,
-            executable_path="/opt/pw-browsers/chromium" if Path("/opt/pw-browsers/chromium").exists() else None)
-        context = await browser.new_context()
-    return p, context
-
-
-async def new_page(context):
-    return await context.new_page()
-
-
-async def guarded_action(page, coro_factory, ctx: DriverContext, step: str):
-    _check_stop()
-    reason = await safety.detect(page)
-    if reason:
-        checkpoint(ctx.app_id, f"halt.{step}", {"reason": reason, "url": page.url})
-        raise ChallengeDetected(reason)
-    result = await coro_factory()
-    _check_stop()
-    return result
-
-
-def print_approval_block(app_id: str, job: dict, resume_type: str, resume_file: str, screening_count: int) -> None:
-    print("\nAPPLICATION READY")
-    print(f"Application: {app_id}")
-    print(f"Company: {job.get('company')}")
-    print(f"Role: {job.get('role')}")
-    print(f"Match: {job.get('match_score')}%")
-    print(f"Resume: {resume_type.upper()}")
-    print(f"Resume file: {resume_file}")
-    print(f"Screening questions: {screening_count}")
-    print("All answers verified.")
-    print("Ready to submit.")
-    print("Approve? YES / NO")
-
-
-def write_pending_approval(app_id: str, job: dict, resume_file: str, screening: list[dict]) -> Path:
-    p = app_dir(app_id) / "pending_approval.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps({
-        "app_id": app_id,
-        "job": job,
-        "resume_file": resume_file,
-        "screening_answers": screening,
-        "at": dt.datetime.now().isoformat(timespec="seconds"),
-    }, indent=2, ensure_ascii=False), encoding="utf-8")
-    return p
-
-
-def read_decision(app_id: str) -> str | None:
-    p = app_dir(app_id) / "decision.json"
-    if not p.exists():
-        return None
+def screenshot(page, app_id: str, name: str) -> Path | None:
+    d = app_dir(app_id) / "screenshots"
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f"{name}.png"
     try:
-        return json.loads(p.read_text(encoding="utf-8")).get("decision")
+        page.screenshot(path=str(p), full_page=True)
+        return p
     except Exception:
         return None
 
 
-# Convenience sync wrappers so the CLI (which is sync) can call async code.
-
-def run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro) if not asyncio.get_event_loop().is_running() \
-        else asyncio.ensure_future(coro)
+def open_browser(headless: bool = False, user_data_dir: Path | None = None):
+    """Returns (playwright, context). A persistent profile keeps ATS
+    logins between runs; the caller closes both."""
+    from playwright.sync_api import sync_playwright
+    pw = sync_playwright().start()
+    try:
+        user_data_dir = user_data_dir or USER_DATA_DIR
+        user_data_dir.mkdir(parents=True, exist_ok=True)
+        context = pw.chromium.launch_persistent_context(
+            str(user_data_dir), headless=headless, executable_path=browser_executable(),
+        )
+    except Exception:
+        pw.stop()
+        raise
+    return pw, context
