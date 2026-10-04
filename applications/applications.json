@@ -1,3 +1,33 @@
 {
-  "applications": []
+  "applications": [
+    {
+      "application_id": "APP-2026-0001",
+      "batch_id": "BATCH-2026-09-06-001",
+      "company": "airbnb",
+      "role": "Automation Engineer, Quality Engineering",
+      "job_url": "https://careers.airbnb.com/positions/8154749?gh_jid=8154749",
+      "job_source": "greenhouse",
+      "location": "Brazil",
+      "work_mode": "",
+      "match_score": 85,
+      "job_posted_date": "2026-08-24T15:41:54-04:00",
+      "date_discovered": "2026-09-06T13:36:59",
+      "date_prepared": "2026-09-06T14:17:05",
+      "date_applied": null,
+      "resume_type": "master",
+      "resume_file": "master-resume.pdf",
+      "status": "READY_FOR_APPROVAL",
+      "ats_status": null,
+      "email_status": null,
+      "interview_stage": null,
+      "recruiter": null,
+      "recruiter_url": null,
+      "followup_date": null,
+      "last_update": "2026-09-06T14:17:05",
+      "next_action": "AWAIT_APPROVAL",
+      "notes": "Forced by policy resume_type_default=master",
+      "error_reason": null,
+      "candidate_name": "Abdul Raheman Anas"
+    }
+  ]
 }

@@ -27,17 +27,17 @@ answers:
 
   # Notice period
   - match: "(?i)notice period"
-    answer: "TODO(user) — set in preferences.md, then here"
+    answer: "Immediate"
 
   # Current location
   - match: "(?i)current (city|location|address)"
     answer: "Hyderabad, India"
   - match: "(?i)willing to relocate"
-    answer: "TODO(user) — set in preferences.md"
+    answer: "Yes"
 
-  # Salary
+  # Salary — user chose not to pre-answer; always stop and ask per job.
   - match: "(?i)(expected|current) (ctc|salary|compensation)"
-    answer: "TODO(user) — set in preferences.md"
+    answer: "__STOP_FOR_USER__"
 
   # Contact
   - match: "(?i)phone|mobile"

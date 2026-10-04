@@ -20,8 +20,9 @@ applications/*/screenshots/
 resumes/tailored/*.pdf
 resumes/tailored/*.html
 
-# The Excel tracker contains PII
+# The Excel tracker and activity log are runtime artifacts (PII)
 tracker/Job_Application_Tracker.xlsx
+tracker/activity_log.md
 
 # Anything the user drops in as private
 profile/*.pdf

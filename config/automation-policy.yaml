@@ -1,7 +1,7 @@
 # Automation policy (spec §14).
 # Ships fail-safe: supervised, no auto-submit, all message sending off.
 
-mode: supervised                       # supervised | autonomous
+mode: autonomous                       # supervised | autonomous
 
 minimum_match_score: 85
 max_applications_per_batch: 100
@@ -37,7 +37,7 @@ allowed_locations:
 allowed_work_modes: [remote, hybrid, onsite]
 
 # Salary policy (optional; leave null to ignore).
-minimum_salary_inr_pa: null
+minimum_salary_inr_pa: 3000000
 minimum_salary_usd_pa: null
 max_salary_deviation_pct: 20
 
@@ -65,14 +65,14 @@ allow_recruiter_messages: false
 allow_followups: false                 # /followup draft-only until true
 allow_cover_letters: false             # off by default; enable per-role if desired
 allow_custom_questions: true
-allow_external_assessments: false      # skip jobs requiring HackerRank/Codility/etc.
+allow_external_assessments: true       # skip jobs requiring HackerRank/Codility/etc.
 
 # Interview / offer autonomy — HARD-CODED OFF, cannot be enabled by config.
 allow_interview_acceptance: false
 allow_offer_acceptance: false
 
 # Submission control — the second lock.
-allow_application_submission: false
+allow_application_submission: true
 
 # Safety stops
 stop_on_captcha: true
