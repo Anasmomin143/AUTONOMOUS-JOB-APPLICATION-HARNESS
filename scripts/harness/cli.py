@@ -520,6 +520,29 @@ def cmd_retry(args) -> int:
     return 3
 
 
+def cmd_decline(args) -> int:
+    """The user decides not to apply to a prepared application."""
+    apps = _load_apps()
+    for a in apps["applications"]:
+        if a.get("application_id") == args.app_id:
+            status = (a.get("status") or "").upper()
+            if status not in ("READY_FOR_APPROVAL", "RETRY_PENDING", "FAILED"):
+                print(f"Refused: {args.app_id} is {status or 'without a status'}; only applications that "
+                      f"were never submitted can be declined.")
+                return 9
+            a["status"] = "DECLINED"
+            a["next_action"] = None
+            a["notes"] = "\n".join(filter(None, [a.get("notes"), f"Declined by user: {args.reason}"]))
+            a["last_update"] = dt.datetime.now().isoformat(timespec="seconds")
+            _save_apps(apps)
+            _sync_excel()
+            activity.log(args.app_id, "DECLINED", args.reason)
+            print(f"Declined {args.app_id} ({a.get('company')} — {a.get('role')}). Nothing was submitted.")
+            return 0
+    print(f"{args.app_id!r} not found.")
+    return 3
+
+
 def cmd_stop(args) -> int:
     P.STATE_DIR.mkdir(parents=True, exist_ok=True)
     P.STOP_SENTINEL.write_text(dt.datetime.now().isoformat(timespec="seconds"), encoding="utf-8")
@@ -618,6 +641,10 @@ def build_parser() -> argparse.ArgumentParser:
     sy = sub.add_parser("sync"); sy.add_argument("--ingest", default=None); sy.set_defaults(func=cmd_sync)
     sub.add_parser("followup").set_defaults(func=cmd_followup)
     rt = sub.add_parser("retry"); rt.add_argument("app_id"); rt.set_defaults(func=cmd_retry)
+    dl = sub.add_parser("decline", help="Decide not to apply to a prepared application.")
+    dl.add_argument("--app-id", dest="app_id", required=True)
+    dl.add_argument("--reason", required=True)
+    dl.set_defaults(func=cmd_decline)
     sub.add_parser("stop").set_defaults(func=cmd_stop)
 
     md = sub.add_parser("mode")

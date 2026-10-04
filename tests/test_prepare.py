@@ -46,6 +46,18 @@ def test_same_company_and_role_under_a_new_url_is_a_duplicate():
     assert len(_apps()) == 1
 
 
+def test_decline_only_applies_before_submission(capsys):
+    write_json(paths.APPLICATIONS_JSON, {"applications": [
+        {"application_id": "APP-1", "status": "READY_FOR_APPROVAL"},
+        {"application_id": "APP-2", "status": "APPLIED"},
+    ]})
+    assert cli.main(["decline", "--app-id", "APP-1", "--reason", "off-target"]) == 0
+    assert cli.main(["decline", "--app-id", "APP-2", "--reason", "changed my mind"]) == 9
+    apps = {a["application_id"]: a for a in _apps()}
+    assert apps["APP-1"]["status"] == "DECLINED" and "Declined by user: off-target" in apps["APP-1"]["notes"]
+    assert apps["APP-2"]["status"] == "APPLIED"
+
+
 def test_ids_continue_after_recorded_applications_when_counters_are_missing():
     # state/counters.json is gitignored, so a fresh clone has no counters
     # but applications.json already holds IDs.
