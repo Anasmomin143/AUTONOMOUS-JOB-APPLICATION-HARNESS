@@ -57,6 +57,10 @@ silence) · 13 submitted but **not verified** (never resubmit; ask the
 user to check) · 14 stopped at questions / challenge / missing form.
 Codes 11, 12 and 14 mean nothing was submitted.
 
+To decide against a prepared application without opening the browser:
+`python -m harness.cli decline --app-id <APP-ID> --reason "<why>"`
+(only for applications that were never submitted).
+
 `--headless` runs without a visible browser; challenges and
 browser-only answers then stop the run instead of being handed over.
 Workday and LinkedIn Easy Apply are manual: the user fills and submits in
